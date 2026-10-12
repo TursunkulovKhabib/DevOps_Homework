@@ -1,0 +1,9 @@
+---
+# Кладём скрипт мониторинга на хост, чтобы запускать его как `monitor.sh docker`
+- name: Install monitor.sh
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../scripts/monitor.sh"
+    dest: /usr/local/bin/monitor.sh
+    owner: root
+    group: root
+    mode: "0755"

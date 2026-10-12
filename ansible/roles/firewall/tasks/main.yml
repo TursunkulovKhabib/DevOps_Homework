@@ -1,0 +1,36 @@
+---
+# ufw выполняет роль Security Group: всё входящее запрещено, кроме явно разрешённого.
+# Правила добавляются ДО включения ufw, чтобы не потерять SSH-сессию.
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+    cache_valid_time: 3600
+
+- name: Allow SSH only from allowed networks (with rate limit)
+  community.general.ufw:
+    rule: limit
+    port: "22"
+    proto: tcp
+    from_ip: "{{ item }}"
+    comment: ssh
+  loop: "{{ ssh_allowed_cidrs }}"
+
+- name: Allow application ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item | string }}"
+    proto: tcp
+  loop: "{{ public_tcp_ports }}"
+
+- name: Deny incoming by default, allow outgoing
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    default: "{{ item.policy }}"
+  loop:
+    - { direction: incoming, policy: deny }
+    - { direction: outgoing, policy: allow }
+
+- name: Enable ufw
+  community.general.ufw:
+    state: enabled

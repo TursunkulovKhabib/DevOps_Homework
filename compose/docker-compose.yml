@@ -1,0 +1,37 @@
+# Разворачивается Ansible-ролью app в /opt/app на VM.
+# nginx (reverse proxy) — единственный сервис с опубликованным портом;
+# app доступен только из внутренней сети backend.
+name: app
+
+services:
+  app:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./app/index.html:/usr/share/nginx/html/index.html:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+  backend:
+    internal: true   # без выхода наружу: app ни с кем, кроме proxy, не общается

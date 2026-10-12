@@ -1,0 +1,4 @@
+# Скрипты и конфиги запускаются в Linux (WSL/VM) — всегда LF, даже при core.autocrlf=true
+* text=auto eol=lf
+*.png binary
+*.jpg binary

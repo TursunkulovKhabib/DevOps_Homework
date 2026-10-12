@@ -1,0 +1,52 @@
+---
+# На VM ранее (прошлое задание) был установлен системный nginx на :80.
+# Порт 80 теперь нужен reverse proxy из Compose, поэтому системный nginx выключаем.
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Stop and disable host nginx (frees port 80)
+  ansible.builtin.systemd_service:
+    name: nginx
+    state: stopped
+    enabled: false
+  when: "'nginx.service' in ansible_facts.services"
+
+- name: Create application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ deployer_user }}"
+    group: "{{ deployer_user }}"
+    mode: "0755"
+  loop:
+    - "{{ app_dir }}"
+    - "{{ app_dir }}/nginx"
+    - "{{ app_dir }}/app"
+
+- name: Copy Compose project files
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../compose/{{ item }}"
+    dest: "{{ app_dir }}/{{ item }}"
+    owner: "{{ deployer_user }}"
+    group: "{{ deployer_user }}"
+    mode: "0644"
+  loop:
+    - docker-compose.yml
+    - nginx/default.conf
+    - app/index.html
+  register: app_files
+
+# Compose v5 при depends_on: service_healthy возвращает действие "Waiting"
+# (ожидание healthcheck), и community.docker 3.7 считает его изменением.
+# Учитываем только реальные действия: Created/Started/Recreated/Pulled и т.п.
+- name: Start Compose project
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    state: present
+    pull: missing
+    recreate: "{{ 'always' if app_files.changed else 'auto' }}"
+  register: compose_up
+  changed_when: >-
+    compose_up.actions | default([])
+    | rejectattr('status', 'equalto', 'Waiting')
+    | list | length > 0
