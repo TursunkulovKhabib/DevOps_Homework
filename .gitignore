@@ -1,0 +1,18 @@
+# IDE
+.idea/
+.vscode/
+
+# Terraform: локальные плагины и state (state содержит детали инфраструктуры)
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+*.tfplan
+
+# Ansible
+*.retry
+
+# Секреты
+.env
+*.pem
+id_*

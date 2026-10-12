@@ -1,0 +1,31 @@
+---
+# Публичный ключ, который кладём пользователям deployer и terraform
+ssh_public_key_file: "~/.ssh/id_ed25519.pub"
+
+# deployer — администратор хоста: sudo без пароля + docker
+deployer_user: deployer
+
+# terraform — сервисный пользователь для Terraform docker-провайдера:
+# только группа docker, без sudo и без пароля (принцип наименьших привилегий)
+terraform_user: terraform
+
+# Firewall (аналог Security Group).
+# По умолчанию SSH доступен отовсюду, но только по ключу и с rate-limit.
+# Чтобы разрешить SSH только со своего IP: -e '{"ssh_allowed_cidrs": ["185.72.224.38/32"]}'
+ssh_allowed_cidrs:
+  - any
+# Порты приложений: 80 — reverse proxy из Docker Compose, 8081 — nginx из Terraform
+public_tcp_ports:
+  - 80
+  - 8081
+
+# Docker
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# Docker Compose окружение
+app_dir: /opt/app

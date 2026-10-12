@@ -1,0 +1,7 @@
+---
+# Этап 5: Docker Compose окружение в /opt/app (reverse proxy + app).
+- name: Deploy Docker Compose environment
+  hosts: app_hosts
+  become: true
+  roles:
+    - app

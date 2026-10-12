@@ -1,0 +1,14 @@
+---
+# Этап 3: подготовка хоста к работе с контейнерами.
+# Порядок ролей важен: группа docker появляется вместе с пакетом docker-ce,
+# поэтому users идёт после docker; firewall — до ssh_hardening, чтобы
+# правило для SSH уже существовало, когда меняется конфиг sshd.
+- name: Prepare host for containers
+  hosts: app_hosts
+  become: true
+  roles:
+    - docker
+    - users
+    - firewall
+    - ssh_hardening
+    - monitoring

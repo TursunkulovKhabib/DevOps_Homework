@@ -1,0 +1,17 @@
+---
+# В sshd_config.d действует первое найденное значение, поэтому файл 00-*
+# перекрывает настройки из 01-lab.conf и 50-cloud-init.conf.
+- name: Harden sshd (keys only, no root login)
+  ansible.builtin.copy:
+    dest: /etc/ssh/sshd_config.d/00-hardening.conf
+    content: |
+      # Managed by Ansible
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PubkeyAuthentication yes
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  notify: Reload ssh
